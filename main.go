@@ -21,7 +21,7 @@ func main() {
 	client := getClient()
 	records := getCurrentIP(client)
 	for _, v := range records {
-		log.Printf("domain:%s current ip:%s record id:%s", v.DomainName, v.Value, v.RecordId)
+		log.Printf("domain: %s current ip: %s record id: %s", v.RR, v.Value, v.RecordId)
 	}
 	publicIP := getPublicIP()
 	log.Println("public ip:", publicIP)
@@ -64,8 +64,8 @@ func updateIP(client *alidns.Client, records []alidns.Record, publicIP string) {
 	for _, record := range records {
 		request := alidns.CreateUpdateDomainRecordRequest()
 		request.Scheme = "https"
-		request.RecordId = record.Value
-		request.RR = rr
+		request.RecordId = record.RecordId
+		request.RR = record.RR
 		request.Type = "A"
 		request.Value = publicIP
 		response, err := client.UpdateDomainRecord(request)
