@@ -19,14 +19,14 @@ var (
 
 func main() {
 	client := getClient()
-	currentIP, recordID := getCurrentIP(client)
-	log.Println("current ip:", currentIP)
-	log.Println("record id:", recordID)
-
+	records := getCurrentIP(client)
+	for _, v := range records {
+		log.Printf("domain:%s current ip:%s record id:%s", v.DomainName, v.Value, v.RecordId)
+	}
 	publicIP := getPublicIP()
 	log.Println("public ip:", publicIP)
-	if publicIP != currentIP {
-		updateIP(client, publicIP, recordID)
+	if publicIP != records[0].Value {
+		updateIP(client, records, publicIP)
 	} else {
 		log.Println("ip not change")
 	}
@@ -43,7 +43,7 @@ func getClient() *alidns.Client {
 	return client
 }
 
-func getCurrentIP(client *alidns.Client) (string, string) {
+func getCurrentIP(client *alidns.Client) []alidns.Record {
 	request := alidns.CreateDescribeDomainRecordsRequest()
 	request.Scheme = "https"
 	request.DomainName = domainName
@@ -57,23 +57,23 @@ func getCurrentIP(client *alidns.Client) (string, string) {
 	if len(records) == 0 {
 		log.Panicln("dns records was empty")
 	}
-	return records[0].Value, records[0].RecordId
+	return records
 }
 
-func updateIP(client *alidns.Client, recordID, publicIP string) {
-	request := alidns.CreateUpdateDomainRecordRequest()
-	request.Scheme = "https"
-
-	request.RecordId = recordID
-	request.RR = rr
-	request.Type = "A"
-	request.Value = publicIP
-
-	response, err := client.UpdateDomainRecord(request)
-	if err != nil {
-		log.Println("update ip faield", err.Error())
+func updateIP(client *alidns.Client, records []alidns.Record, publicIP string) {
+	for _, record := range records {
+		request := alidns.CreateUpdateDomainRecordRequest()
+		request.Scheme = "https"
+		request.RecordId = record.Value
+		request.RR = rr
+		request.Type = "A"
+		request.Value = publicIP
+		response, err := client.UpdateDomainRecord(request)
+		if err != nil {
+			log.Println("update ip faield", err.Error())
+		}
+		log.Printf("update ip success,response is %#v\n", response)
 	}
-	log.Printf("update ip success,response is %#v\n", response)
 }
 
 func getPublicIP() string {
