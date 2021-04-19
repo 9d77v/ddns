@@ -15,6 +15,7 @@ var (
 	secret      = os.Getenv("SECRET")
 	domainName  = os.Getenv("DomainName")
 	rr          = os.Getenv("RR")
+	ipDomain    = os.Getenv("GET_IP_DOMAIN")
 )
 
 func main() {
@@ -77,7 +78,7 @@ func updateIP(client *alidns.Client, records []alidns.Record, publicIP string) {
 }
 
 func getPublicIP() string {
-	resp, err := http.Get("http://myexternalip.com/raw")
+	resp, err := http.Get(ipDomain)
 	if err != nil {
 		log.Panicln("get public ip failed:", err)
 	}
