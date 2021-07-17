@@ -4,7 +4,7 @@
 # usage
 ```
 go build
-AccessKeyID=xxx SECRET=xxx DomainName=xxx RR=xxx ddns
+AccessKeyID=xx SECRET=xx DomainName=xx.com GET_IP_DOMAIN=http://whatismyip.akamai.com RR=@,www ddns
 ```
 
 # refernece

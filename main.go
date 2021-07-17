@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/alidns"
 )
@@ -19,15 +20,23 @@ var (
 )
 
 func main() {
+	rrSet := map[string]struct{}{}
+	for _, v := range strings.Split(rr, ",") {
+		rrSet[v] = struct{}{}
+	}
 	client := getClient()
 	records := getCurrentIP(client)
+	validRecords := []alidns.Record{}
 	for _, v := range records {
-		log.Printf("domain: %s current ip: %s record id: %s", v.RR, v.Value, v.RecordId)
+		if _, ok := rrSet[v.RR]; ok {
+			log.Printf("domain: %s current ip: %s record id: %s", v.RR, v.Value, v.RecordId)
+			validRecords = append(validRecords, v)
+		}
 	}
 	publicIP := getPublicIP()
 	log.Println("public ip:", publicIP)
-	if publicIP != records[0].Value {
-		updateIP(client, records, publicIP)
+	if publicIP != validRecords[0].Value {
+		updateIP(client, validRecords, publicIP)
 	} else {
 		log.Println("ip not change")
 	}
@@ -48,7 +57,6 @@ func getCurrentIP(client *alidns.Client) []alidns.Record {
 	request := alidns.CreateDescribeDomainRecordsRequest()
 	request.Scheme = "https"
 	request.DomainName = domainName
-	request.RRKeyWord = rr
 
 	response, err := client.DescribeDomainRecords(request)
 	if err != nil {
